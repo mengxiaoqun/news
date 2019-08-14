@@ -3,12 +3,15 @@
 from flask import Flask,render_template,abort
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from pymongo import MongoClient
 
 app = Flask(__name__)
 app.config['TEMPLATE_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/news'
 
 db = SQLAlchemy(app)
+client = MongoClient('127.0.0.1',27017)
+mongo = client.news
 
 
 class File(db.Model):
@@ -40,6 +43,37 @@ class Category(db.Model):
 
     def __repr__(self):
         return '<Category %r>' % self.name
+    
+    def add_tag(self,tag_name):
+        result = mongo.files.find_one({'id':self.id})
+        if result:
+            tags = result['tags']
+            if tag_name not in tags:
+                tags.append(tag_name)
+                mongo.files.update_one({'id':self.id},{'$set':{'tags':tags}})
+            return tags
+        else:
+            mongo.files.insert_one({'id':self.id,'tags':[tag_name]})
+            return [tag_name]
+    
+    def remove_tag(self,tag_name):
+        result = mongo.files.find_one({'id':self.id})
+        if result:
+            tags = result['tags']
+            if tag_name in tags:
+                tags.remove(tag_name)
+                mongo.files.update_one({'id':self.id},{'$set':{'tags':tags}})
+                return tags
+        else:
+            return []
+    @property
+    def tags(self):
+        result = mongo.files.find_one({'id':self.id})
+        if result:
+            return result['files']
+        else:
+            []
+
 
 def create_data():
     java = Category(name='Java')
@@ -47,7 +81,8 @@ def create_data():
     file1 = File('Hello Java', datetime.utcnow(), java,'File Content - Java is cool!')
     file2 = File('Hello Python', datetime.utcnow(), python,'File Content - Python is cool!')
     db.session.add(java)
-
+    db.session.add(python)
+    db.session.add(file1)
     db.session.add(file2)
     db.session.commit()
 
