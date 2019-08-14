@@ -1,3 +1,6 @@
-{% for d in data %}
-<a href="{{ url_for('file',file_id=d.id) }}">{{ d.title }}</a>
+{% for data in datas %}
+<a href="{{ url_for('file',file_id=data.id) }}">{{ data.title }}</a>
+{% for tag in data.tags %}
+{{ tag }}
+{% endfor %}
 {% endfor %}

@@ -98,8 +98,16 @@ def create_data():
 
 @app.route('/')
 def index():
-    data = File.query.all()
-    return render_template('index.html',data=data)
+    result = []
+    datas = File.query.all()
+    for data in datas:
+        content['id'] = data.id
+        content['title'] = data.title
+        content['content'] = data.content
+        result = mongo.files.find_one({'id':data.id})
+        content['tags'] = result['tags']
+        result.append(content)
+    return render_template('index.html',datas=result)
 
 @app.errorhandler(404)
 def not_found(error):
