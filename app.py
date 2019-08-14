@@ -34,15 +34,6 @@ class File(db.Model):
     def __repr__(self):
         return '<File %r>' % self.title
 
-
-class Category(db.Model):
-    __tablename__ = 'categories'
-    id = db.Column(db.Integer,primary_key=True)
-    name = db.Column(db.String(50))
-    files = db.relationship('File')
-
-    def __repr__(self):
-        return '<Category %r>' % self.name
     
     def add_tag(self,tag_name):
         result = mongo.files.find_one({'id':self.id})
@@ -66,13 +57,25 @@ class Category(db.Model):
                 return tags
         else:
             return []
+
     @property
     def tags(self):
         result = mongo.files.find_one({'id':self.id})
         if result:
-            return result['files']
+            return result['tags']
         else:
-            []
+            return []
+
+
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(50))
+    files = db.relationship('File')
+
+    def __repr__(self):
+        return '<Category %r>' % self.name
 
 
 def create_data():
@@ -85,6 +88,12 @@ def create_data():
     db.session.add(file1)
     db.session.add(file2)
     db.session.commit()
+
+    file1.add_tag('tech')
+    file1.add_tag('java')
+    file1.add_tag('linux')
+    file2.add_tag('tech')
+    file2.add_tag('python')
 
 
 @app.route('/')
